@@ -1,21 +1,384 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>My first Vue app</title>
+  <title>魂石计算器</title>
   <script src="https://unpkg.com/vue"></script>
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+  <!-- DataTables -->
+  <script src="https://code.jquery.com/jquery-3.6.0.slim.js" integrity="sha256-HwWONEZrpuoh951cQD1ov2HUK5zA5DwJ1DNUXaM6FsY=" crossorigin="anonymous"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.js"></script>
 </head>
+
 <body>
-  <div id="app">
-    {{ message }}
+  <div class="container">
+    <div class="row">
+      <h1 class="h1 mt-3">魂石计算器</h1>
+      <p class="lead mt-2">对魂石进行评分并使用Cookie保存魂石记录。</p>
+    </div>
+    
+    <div class="row">
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="coreappraisal-tab" data-bs-toggle="tab" data-bs-target="#coreappraisal" type="button" role="tab" aria-controls="coreappraisal" aria-selected="true">魂石评分</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="coremgr-tab" data-bs-toggle="tab" data-bs-target="#coremgr" type="button" role="tab" aria-controls="coremgr" aria-selected="false">魂石管理</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="corecmp-tab" data-bs-toggle="tab" data-bs-target="#corecmp" type="button" role="tab" aria-controls="corecmp" aria-selected="false">魂石比较</button>
+        </li>
+      </ul>
+      <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="coreappraisal" role="coreappraisal" aria-labelledby="coreappraisal-tab">
+          <div class="container">
+            <div class="row mt-5"><h2>选择一个魂石</h2></div>
+            <div class="row mt-2">
+              <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+                <template v-for="(coreName, idx) in c_CoreNameList">
+                  <input type="radio" class="btn-check" name="btnRadio-core" :id="coreName" :value="coreName" autocomplete="off" v-model="selectedCore">
+                  <label class="btn btn-outline-primary" :for="coreName"> {{coreName}} </label>
+                </template>
+              </div>
+            </div>
+            
+            <div class="row mt-5" v-if="selectedCore">
+              <h2>选择魂石位置</h2>
+              <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+                <template v-for="(pos, idx) in c_PosList">
+                  <input type="radio" class="btn-check" name="btnRadio-pos" :id="pos" :value="pos" autocomplete="off" v-model="selectedPos">
+                  <label class="btn btn-outline-primary" :for="pos"> {{pos}} </label>
+                </template>
+              </div>
+            </div>
+
+            <div class="row mt-5" v-if="selectedCore && selectedPos">
+              <h2>为魂石<span class="badge bg-info">{{selectedCore}} · {{selectedPos}}</span>选择词条</h2>
+            </div>
+            <div class="row mt-2" v-if="selectedCore && selectedPos">
+              <div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
+                <template v-for="(attrName, idx) in attrList">
+                  <input type="checkbox" class="btn-check" :id="attrName" :value="attrName" autocomplete="off" v-model="selectedAttrs">
+                  <label class="btn btn-outline-primary" :for="attrName"> {{attrName}} </label>
+                </template>
+              </div>
+            </div>
+
+            <div class="alert alert-warning mt-5" role="alert" v-if="selectedCore && selectedPos && selectedAttrs.length != 4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+                <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z"/>
+                <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z"/>
+              </svg>需选中四个词条。您已经选择 {{selectedAttrs.length}} / 4 个。
+            </div>
+
+            <div class="row mt-5" v-if="selectedCore && selectedPos && selectedAttrs.length == 4">
+              <h2>设置词条强度</h2>              
+              <div class="container mt-2">
+                <div class="form-group row" v-for="(attrName, idx) in selectedAttrs">
+                  <div class="col-sm-1 col-form-label mt-0">{{attrName}}</div>
+                  <div class="col-sm-4"><input type="range" class="form-range" min="0" max="10" v-model="attrQuants[idx].value"></div>
+                  <div class="col-sm-1">{{attrQuants[idx].value == 0 ? "无" : attrQuants[idx].value}}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mt-5" v-if="selectedCore && selectedPos && selectedAttrs.length == 4">
+              <h2>魂石得分</h2>
+
+              <span class="mt-3" v-if="scores.Min != scores.Max">魂石得分位于 {{scores.Min.toFixed(2)}} 和 {{scores.Max.toFixed(2)}} 之间，期望得分 {{scores.Avg.toFixed(2)}}。</span>
+              <span class="mt-3" v-if="scores.Min == scores.Max">魂石得分 {{scores.Avg.toFixed(2)}}。</span>
+
+              <!-- <div class="col-sm"><button type="button" class="btn btn-primary">添加到魂石库</button></div> -->
+            </div>
+          </div>
+        </div>
+        <div class="tab-pane fade" id="coremgr" role="tabpanel" aria-labelledby="coremgr-tab">
+        </div>
+        <div class="tab-pane fade" id="contact" role="corecmp" aria-labelledby="corecmp-tab">
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    var app = new Vue({
-      el: '#app',
-      data: {
-        message: 'TDJ Anima!'
+    const usageAndCores = {
+      "物": "幽魉，荒蛰，罗鬼，头狼",
+      "法": "九环朱蝮，朱焰魔火，妖术师，百眼翼魔",
+      "疗": "冥葵，尸魔术士",
+      "暴": "刚破鬼，赤炼鬼",
+      "防": "咒石兵，冰魔蝎"
+    };
+
+    const c_CoreAttrBenefits = {
+      "物":
+      {
+          "物攻": 1.0,
+          "物伤": 0.9,
+          "物穿": 0.6,
+          "暴击": 0.3,
+
+          "气血": 1.0,
+          
+          "物免": 0.6,
+          "法免": 0.6,
+          
+          "物防": 0.2,
+          "法防": 0.2,
+          
+          "暴抗": 0.1,
+          "反伤": 0.1
+      },
+      "法":
+      {
+          "法攻": 1.0,
+          "法伤": 0.9,
+          "法穿": 0.6,
+          "暴击": 0.3,
+
+          "气血": 1.0,
+          
+          "物免": 0.6,
+          "法免": 0.6,
+          
+          "物防": 0.2,
+          "法防": 0.2,
+          
+          "暴抗": 0.1,
+          "反伤": 0.1
+      },
+      "疗":
+      {
+          "暴击": 0.0,
+
+          "法攻": 1.0,
+          "法伤": 0.0,
+          "法穿": 0.0,
+
+          "气血": 1.0,
+
+          "物免": 0.6,
+          "法免": 0.6,
+          
+          "物防": 0.4,
+          "法防": 0.4,
+          
+          "暴抗": 0.1,
+          "反伤": 0.1
+      },
+      "暴":
+      {
+          "物攻": 1.0,
+          "物伤": 0.9,
+          "物穿": 0.6,
+          "暴击": 0.3,
+
+          "气血": 1.0,
+          
+          "物免": 0.6,
+          "法免": 0.6,
+          
+          "物防": 0.2,
+          "法防": 0.2,
+          
+          "暴抗": 0.1,
+          "反伤": 0.1
+      },
+      "防":
+      {
+          "物攻": 1.0,
+          "物伤": 0.9,
+          "物穿": 0.6,
+          "暴击": 0.3,
+
+          "气血": 1.0,
+          
+          "物免": 0.6,
+          "法免": 0.6,
+          
+          "物防": 0.2,
+          "法防": 0.2,
+          
+          "暴抗": 0.1,
+          "反伤": 0.9
       }
+    };
+
+    const c_AttrQuantRanges = {
+        "天-ATT-Max": 10,
+        "天-DEF-Max": 5,
+        "天-BLD-Max": 5,
+
+        "天-ATT-Min": 4,
+        "天-DEF-Min": 2,
+        "天-BLD-Min": 2,
+
+        "地-ATT-Max": 5,
+        "地-DEF-Max": 10,
+        "地-BLD-Max": 10,
+
+        "地-ATT-Min": 2,
+        "地-DEF-Min": 4,
+        "地-BLD-Min": 4,
+
+        "荒-ATT-Max": 7,
+        "荒-DEF-Max": 7,
+        "荒-BLD-Max": 7,
+
+        "荒-ATT-Min": 3,
+        "荒-DEF-Min": 3,
+        "荒-BLD-Min": 3,
+    }
+
+    const adaptToPos_Att = {
+      "天": {"ATT": 1.0, "DEF": 0.75, "BLD": 0.9},
+      "地": {"ATT": 1.0, "DEF": 0.75, "BLD": 0.9},
+      "荒": {"ATT": 1.0, "DEF": 0.75, "BLD": 0.9},
+    }
+    const adaptToPos_Def = {
+        "天": {"ATT": 0.5, "DEF": 1.0, "BLD": 1.0},
+        "地": {"ATT": 0.5, "DEF": 1.0, "BLD": 1.0},
+        "荒": {"ATT": 0.5, "DEF": 1.0, "BLD": 1.0},
+    }
+    const adaptToPos_Heal = {
+        "天": {"ATT": 0.7, "DEF": 1.0, "BLD": 1.0},
+        "地": {"ATT": 0.7, "DEF": 1.0, "BLD": 1.0},
+        "荒": {"ATT": 0.7, "DEF": 1.0, "BLD": 1.0},
+    }
+
+    const c_AdaptToPos= {
+        "物": adaptToPos_Att,
+        "法": adaptToPos_Att,
+        "暴": adaptToPos_Att,
+        "疗": adaptToPos_Heal,
+        "防": adaptToPos_Def,
+    }
+
+    const posList = ["天", "地", "荒"]
+
+    var coreNameList = [];
+    var coreNameToUsage = {};
+
+    function getCoreUsage(coreNameOrUsage){
+      if (coreNameOrUsage in usageAndCores){
+        return coreNameOrUsage;
+      } else {
+        return coreNameToUsage[coreNameOrUsage];
+      }
+    }
+
+    function getAttributeType(attrName){
+      if("攻伤穿击".includes(attrName[1])) {
+        return "ATT";
+      } else if (attrName[1] == "血") {
+        return "BLD";
+      } else {
+        return "DEF";
+      }
+    }
+
+    function estimateQuant(pos, attrType, quantSource){
+      if(quantSource == "Avg")
+      {
+        return (estimateQuant(pos, attrType, "Min") + estimateQuant(pos, attrType, "Max")) * 0.5;
+      }
+      var key = `${pos}-${attrType}-${quantSource}`;
+      return c_AttrQuantRanges[key]
+    }
+
+    function computeAttributeScores(coreId, coreTag, coreNameOrUsage, pos, attrs) {
+      var attrScores = [];
+
+      var usage = getCoreUsage(coreNameOrUsage);
+
+      for (attrName in attrs) {
+        var attrQuant = attrs[attrName];
+        var attrType = getAttributeType(attrName);
+
+        var quantSources = undefined;
+        if (attrQuant == 0) {
+          quantSources = ["Min", "Avg", "Max"];
+        } else {
+          quantSources = ["Real"];
+        }
+
+        for (quantSource of quantSources) {
+          var attrQuant = quantSource == "Real" ? attrQuant : estimateQuant(pos, attrType, quantSource);
+          var adaptToPos = c_AdaptToPos[usage][pos][attrType];
+          var benefit = c_CoreAttrBenefits[usage][attrName];
+          var attrScore = attrQuant * adaptToPos * benefit;
+          attrScores.push({
+              ID: coreId,
+              Tag: coreTag,
+              位置: pos,
+              词条: attrName,
+              词条值: attrQuant,
+              值来源: quantSource,
+              收益: benefit,
+              适用性: adaptToPos,
+              词条评分: attrScore
+          });
+        }
+      }
+
+      return attrScores;
+    }
+
+    function summarizeCoreScores(attrScores) {
+      var l = 0.0, a = 0.0, u = 0.0;
+      for (attrScore of attrScores) {
+        if (attrScore.值来源 != "Max" && attrScore.值来源 != "Avg") {
+          l += attrScore.词条评分;
+        }
+        if (attrScore.值来源 != "Min" && attrScore.值来源 != "Avg") {
+          u += attrScore.词条评分;
+        }
+        if (attrScore.值来源 != "Min" && attrScore.值来源 != "Max") {
+          a += attrScore.词条评分;
+        }
+      }
+      return {Min: l, Avg: a, Max: u};
+    }
+
+    for (const [usage, coreNames] of Object.entries(usageAndCores))
+    {
+      for (const coreName of coreNames.split('，'))
+      {
+        coreNameList.push(coreName);
+        coreNameToUsage[coreName] = usage;
+      }
+    }
+
+    var coreappraisal = new Vue({
+      el: "#coreappraisal",
+      data: {
+        c_PosList: posList,
+        c_CoreNameList: coreNameList,
+
+        selectedCore: "",
+        selectedPos: "",
+        selectedAttrs: [],
+
+        attrQuants: [{"value":0}, {"value":0}, {"value": 0}, {"value": 0}]
+      },
+      computed: {
+        attrList: function() {
+          return Object.keys(c_CoreAttrBenefits[coreNameToUsage[this.selectedCore]])
+        },
+        scores: function() {
+          var attrs = {};
+          for (const idx in this.selectedAttrs) {
+            attrName = this.selectedAttrs[idx];
+            attrs[attrName] = this.attrQuants[idx].value;
+          }
+          var attrScores = computeAttributeScores(-1, "Temp", this.selectedCore, this.selectedPos, attrs);
+          var coreScores = summarizeCoreScores(attrScores);
+          return coreScores;
+        }
+      },
     })
-  </script>
+
+ </script>
 </body>
 </html>
